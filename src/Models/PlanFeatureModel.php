@@ -85,4 +85,17 @@ class PlanFeatureModel extends Model
     {
         return (bool)($this->type == 'limit' && $this->limit < 0);
     }
+
+    /**
+     * @param null $property
+     * @return mixed
+     */
+    public function getMetaData($property = null)
+    {
+        if (is_null($property)) {
+            return $this->metadata;
+        }
+
+        return $this->metadata->{$property};
+    }
 }

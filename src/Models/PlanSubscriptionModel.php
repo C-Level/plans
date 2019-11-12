@@ -318,6 +318,22 @@ class PlanSubscriptionModel extends Model
     }
 
     /**
+     * @param string $featureCode
+     * @param null $property
+     * @return mixed
+     */
+    public function getFeatureMetaData(string $featureCode, $property = null)
+    {
+        $feature = $this->features()->code($featureCode)->first();
+
+        if(is_null($property)) {
+            return $feature->getMetaData();
+        }
+
+        return $feature->getMetaData($property);
+    }
+
+    /**
      * Get the amount used for a limit.
      *
      * @param string $featureCode The feature code. This feature has to be 'limit' type.

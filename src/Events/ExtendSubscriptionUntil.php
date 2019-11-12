@@ -8,18 +8,37 @@ class ExtendSubscriptionUntil
 {
     use SerializesModels;
 
+    /**
+     * @var \Illuminate\Database\Eloquent\Model
+     */
     public $model;
+
+    /**
+     * @var \Rennokki\Plans\Models\PlanSubscriptionModel
+     */
     public $subscription;
+
+    /**
+     * @var \Carbon\Carbon
+     */
     public $expiresOn;
+
+    /**
+     * @var bool
+     */
     public $startFromNow;
+
+    /**
+     * @var \Rennokki\Plans\Models\PlanSubscriptionModel|null
+     */
     public $newSubscription;
 
     /**
-     * @param Model $model The model on which the action was done.
-     * @param SubscriptionModel $subscription Subscription that was extended.
-     * @param Carbon $expiresOn The date when the subscription expires.
+     * @param \Illuminate\Database\Eloquent\Model $model The model on which the action was done.
+     * @param \Rennokki\Plans\Models\PlanSubscriptionModel $subscription Subscription that was extended.
+     * @param \Carbon\Carbon $expiresOn The date when the subscription expires.
      * @param bool $startFromNow Wether the current subscription is extended or is created at the next cycle.
-     * @param null|SubscriptionModel $newSubscription Null if $startFromNow is true; The new subscription created in extension.
+     * @param null|\Rennokki\Plans\Models\PlanSubscriptionModel $newSubscription Null if $startFromNow is true; The new subscription created in extension.
      * @return void
      */
     public function __construct($model, $subscription, $expiresOn, bool $startFromNow, $newSubscription)

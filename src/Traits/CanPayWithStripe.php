@@ -3,6 +3,7 @@
 namespace Rennokki\Plans\Traits;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Stripe\Stripe;
 use Stripe\Charge as StripeCharge;
 use Stripe\Customer as StripeCustomer;
@@ -18,9 +19,9 @@ trait CanPayWithStripe
     /**
      * Get the Stripe Customer relationship.
      *
-     * @return morphOne The relationship.
+     * @return \Illuminate\Database\Eloquent\Relations\MorphOne
      */
-    public function stripeCustomer()
+    public function stripeCustomer(): MorphOne
     {
         return $this->morphOne(config('plans.models.stripeCustomer'), 'model');
     }
@@ -32,17 +33,17 @@ trait CanPayWithStripe
      */
     public function isStripeCustomer()
     {
-        return (bool) ($this->stripeCustomer()->count() == 1);
+        return (bool)($this->stripeCustomer()->count() == 1);
     }
 
     /**
      * Get the local Stripe Customer instance.
      *
-     * @return null|StripeCustomerModel The Stripe Customer instance.
+     * @return void|\Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|object
      */
     public function getStripeCustomer()
     {
-        if (! $this->isStripeCustomer()) {
+        if (!$this->isStripeCustomer()) {
             return;
         }
 
@@ -52,7 +53,7 @@ trait CanPayWithStripe
     /**
      * Create a local Stripe Customer instance.
      *
-     * @return bool|StripeCustomerModel Fresh Stripe Customer instance, or false on error.
+     * @return bool|\Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|object|void
      */
     public function createStripeCustomer()
     {
@@ -82,17 +83,17 @@ trait CanPayWithStripe
      */
     public function deleteStripeCustomer()
     {
-        if (! $this->isStripeCustomer()) {
+        if (!$this->isStripeCustomer()) {
             return false;
         }
 
-        return (bool) $this->stripeCustomer()->delete();
+        return (bool)$this->stripeCustomer()->delete();
     }
 
     /**
      * Initiate the Stripe API key.
      *
-     * @return Stripe
+     * @return void
      */
     public function initiateStripeAPI()
     {
@@ -106,7 +107,7 @@ trait CanPayWithStripe
     /**
      * Set Stripe as payment method.
      *
-     * @return void
+     * @return self
      */
     public function withStripe()
     {
@@ -146,13 +147,13 @@ trait CanPayWithStripe
      * @param float $amount The amount charged.
      * @param string $currency The currency code.
      * @param string $description The description of the payment. (optional)
-     * @return Stripe\Charge
+     * @return \Stripe\Charge
      */
     public function chargeWithStripe(float $amount, string $currency, string $description = null)
     {
         $customer = $this->getStripeCustomer();
 
-        if (! $customer) {
+        if (!$customer) {
             $customer = $this->createStripeCustomer();
         }
 
@@ -169,20 +170,23 @@ trait CanPayWithStripe
     /**
      * Charge the user for the last due subscription and renew on succesful payment.
      *
-     * @return bool|PlanSubscriptionModel
+     * @param null $callback
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel
      */
     public function chargeForLastDueSubscription($callback = null)
     {
+        /** @var \Rennokki\Plans\Models\PlanSubscriptionModel $lastDueSubscription */
         $lastDueSubscription = $this->lastDueSubscription();
 
-        if (! $lastDueSubscription) {
+        if (!$lastDueSubscription) {
             return false;
         }
 
         $lastDueSubscription->load(['plan']);
+
         $plan = $lastDueSubscription->plan;
 
-        if (! is_callable($callback)) {
+        if (!is_callable($callback)) {
             try {
                 $stripeCharge = $this->chargeWithStripe(($this->chargingPrice) ?: $plan->price, ($this->chargingCurrency) ?: $plan->currency);
 

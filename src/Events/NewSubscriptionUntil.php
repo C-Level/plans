@@ -8,14 +8,25 @@ class NewSubscriptionUntil
 {
     use SerializesModels;
 
+    /**
+     * @var \Illuminate\Database\Eloquent\Model
+     */
     public $model;
+
+    /**
+     * @var \Rennokki\Plans\Models\PlanSubscriptionModel
+     */
     public $subscription;
+
+    /**
+     * @var \Carbon\Carbon
+     */
     public $expiresOn;
 
     /**
-     * @param Model $model The model that subscribed.
-     * @param SubscriptionModel $subscription Subscription the model has subscribed to.
-     * @param Carbon $expiresOn The date when the subscription expires.
+     * @param \Illuminate\Database\Eloquent\Model $model The model that subscribed.
+     * @param \Rennokki\Plans\Models\PlanSubscriptionModel $subscription Subscription the model has subscribed to.
+     * @param \Carbon\Carbon $expiresOn The date when the subscription expires.
      * @return void
      */
     public function __construct($model, $subscription, $expiresOn)

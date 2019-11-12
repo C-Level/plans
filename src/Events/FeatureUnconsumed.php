@@ -8,14 +8,29 @@ class FeatureUnconsumed
 {
     use SerializesModels;
 
+    /**
+     * @var \Rennokki\Plans\Models\PlanSubscriptionModel
+     */
     public $subscription;
+
+    /**
+     * @var \Rennokki\Plans\Models\PlanFeatureModel
+     */
     public $feature;
+
+    /**
+     * @var float
+     */
     public $used;
+
+    /**
+     * @var float
+     */
     public $remaining;
 
     /**
-     * @param SubscriptionModel $subscription Subscription on which action was done.
-     * @param FeatureModel $feature The feature that was consumed.
+     * @param \Rennokki\Plans\Models\PlanSubscriptionModel $subscription Subscription on which action was done.
+     * @param \Rennokki\Plans\Models\PlanFeatureModel $feature The feature that was consumed.
      * @param float $used The amount used on this unconsumption.
      * @param float $remaining The amount remaining for this feature.
      * @return void

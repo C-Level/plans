@@ -9,15 +9,25 @@ class ChargeSuccessful
 {
     use SerializesModels;
 
+    /**
+     * @var \Rennokki\Plans\Models\PlanSubscriptionModel
+     */
     public $model;
+
+    /**
+     * @var \Rennokki\Plans\Models\PlanSubscriptionModel
+     */
     public $subscription;
+
+    /**
+     * @var \Stripe\Charge
+     */
     public $stripeCharge;
 
     /**
-     * @param Model $model The model on which the action was done.
-     * @param SubscriptionModel $subscription Subscription that was paid.
-     * @param Stripe\Charge The result of the Stripe\Charge::create() call.
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Model $model The model on which the action was done.
+     * @param \Rennokki\Plans\Models\PlanSubscriptionModel $subscription Subscription that was paid.
+     * @param \Stripe\Charge $stripeCharge
      */
     public function __construct($model, $subscription, StripeCharge $stripeCharge)
     {

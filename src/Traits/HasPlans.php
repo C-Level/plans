@@ -3,6 +3,7 @@
 namespace Rennokki\Plans\Traits;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 trait HasPlans
 {
@@ -11,9 +12,9 @@ trait HasPlans
     /**
      * Get Subscriptions relatinship.
      *
-     * @return morphMany Relatinship.
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
-    public function subscriptions()
+    public function subscriptions(): MorphMany
     {
         return $this->morphMany(config('plans.models.subscription'), 'model');
     }
@@ -21,19 +22,17 @@ trait HasPlans
     /**
      * Return the current subscription relatinship.
      *
-     * @return morphMany Relatinship.
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
-    public function currentSubscription()
+    public function currentSubscription(): MorphMany
     {
         return $this->subscriptions()
-                    ->where('starts_on', '<', Carbon::now())
-                    ->where('expires_on', '>', Carbon::now());
+            ->where('starts_on', '<', Carbon::now())
+            ->where('expires_on', '>', Carbon::now());
     }
 
     /**
-     * Return the current active subscription.
-     *
-     * @return PlanSubscriptionModel The PlanSubscription model instance.
+     * @return \Rennokki\Plans\Models\PlanSubscriptionModel
      */
     public function activeSubscription()
     {
@@ -43,11 +42,11 @@ trait HasPlans
     /**
      * Get the last active subscription.
      *
-     * @return null|PlanSubscriptionModel The PlanSubscription model instance.
+     * @return void|null|\Rennokki\Plans\Models\PlanSubscriptionModel The PlanSubscription model instance.
      */
     public function lastActiveSubscription()
     {
-        if (! $this->hasSubscriptions()) {
+        if (!$this->hasSubscriptions()) {
             return;
         }
 
@@ -61,11 +60,11 @@ trait HasPlans
     /**
      * Get the last subscription.
      *
-     * @return null|PlanSubscriptionModel Either null or the last subscription.
+     * @return void|\Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphMany|object
      */
     public function lastSubscription()
     {
-        if (! $this->hasSubscriptions()) {
+        if (!$this->hasSubscriptions()) {
             return;
         }
 
@@ -79,7 +78,7 @@ trait HasPlans
     /**
      * Get the last unpaid subscription, if any.
      *
-     * @return PlanSubscriptionModel
+     * @return \Rennokki\Plans\Models\PlanSubscriptionModel
      */
     public function lastUnpaidSubscription()
     {
@@ -91,11 +90,11 @@ trait HasPlans
      * For example, on subscription, if your user wants to subscribe to another subscription and has a due (unpaid) one, it will
      * check for the last due, will cancel it, and will re-subscribe to it.
      *
-     * @return null|PlanSubscriptionModel Null or a Plan Subscription instance.
+     * @return void|null|\Rennokki\Plans\Models\PlanSubscriptionModel Null or a Plan Subscription instance.
      */
     public function lastDueSubscription()
     {
-        if (! $this->hasSubscriptions()) {
+        if (!$this->hasSubscriptions()) {
             return;
         }
 
@@ -105,7 +104,7 @@ trait HasPlans
 
         $lastActiveSubscription = $this->lastActiveSubscription();
 
-        if (! $lastActiveSubscription) {
+        if (!$lastActiveSubscription) {
             return $this->lastUnpaidSubscription();
         }
 
@@ -123,9 +122,9 @@ trait HasPlans
      *
      * @return bool Wether the binded model has subscriptions or not.
      */
-    public function hasSubscriptions()
+    public function hasSubscriptions(): bool
     {
-        return (bool) ($this->subscriptions()->count() > 0);
+        return (bool)($this->subscriptions()->count() > 0);
     }
 
     /**
@@ -133,9 +132,9 @@ trait HasPlans
      *
      * @return bool Wether the binded model has an active subscription or not.
      */
-    public function hasActiveSubscription()
+    public function hasActiveSubscription(): bool
     {
-        return (bool) $this->activeSubscription();
+        return (bool)$this->activeSubscription();
     }
 
     /**
@@ -143,18 +142,19 @@ trait HasPlans
      *
      * @return bool
      */
-    public function hasDueSubscription()
+    public function hasDueSubscription(): bool
     {
-        return (bool) $this->lastDueSubscription();
+        return (bool)$this->lastDueSubscription();
     }
 
     /**
      * Subscribe the binded model to a plan. Returns false if it has an active subscription already.
      *
-     * @param PlanModel $plan The Plan model instance.
+     * @param \Rennokki\Plans\Models\PlanModel $plan The Plan model instance.
      * @param int $duration The duration, in days, for the subscription.
      * @param bool $isRecurring Wether the subscription should auto renew every $duration days.
-     * @return PlanSubscription The PlanSubscription model instance.
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel The PlanSubscription model instance.
+     * @throws \Exception
      */
     public function subscribeTo($plan, int $duration = 30, bool $isRecurring = true)
     {
@@ -168,13 +168,14 @@ trait HasPlans
             $this->lastDueSubscription()->delete();
         }
 
+        /** @var \Rennokki\Plans\Models\PlanSubscriptionModel $subscription */
         $subscription = $this->subscriptions()->save(new $subscriptionModel([
             'plan_id' => $plan->id,
             'starts_on' => Carbon::now()->subSeconds(1),
             'expires_on' => Carbon::now()->addDays($duration),
             'cancelled_on' => null,
             'payment_method' => ($this->subscriptionPaymentMethod) ?: null,
-            'is_paid' => (bool) ($this->subscriptionPaymentMethod) ? false : true,
+            'is_paid' => (bool)($this->subscriptionPaymentMethod) ? false : true,
             'charging_price' => ($this->chargingPrice) ?: $plan->price,
             'charging_currency' => ($this->chargingCurrency) ?: $plan->currency,
             'is_recurring' => $isRecurring,
@@ -203,10 +204,11 @@ trait HasPlans
     /**
      * Subscribe the binded model to a plan. Returns false if it has an active subscription already.
      *
-     * @param PlanModel $plan The Plan model instance.
-     * @param DateTme|string $date The date (either DateTime, date or Carbon instance) until the subscription will be extended until.
+     * @param \Rennokki\Plans\Models\PlanModel $plan The Plan model instance.
+     * @param \DateTime|string $date The date (either DateTime, date or Carbon instance) until the subscription will be extended until.
      * @param bool $isRecurring Wether the subscription should auto renew. The renewal period (in days) is the difference between now and the set date.
-     * @return PlanSubscription The PlanSubscription model instance.
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel The PlanSubscription model instance.
+     * @throws \Exception
      */
     public function subscribeToUntil($plan, $date, bool $isRecurring = true)
     {
@@ -222,13 +224,14 @@ trait HasPlans
             $this->lastDueSubscription()->delete();
         }
 
+        /** @var \Rennokki\Plans\Models\PlanSubscriptionModel $subscription */
         $subscription = $this->subscriptions()->save(new $subscriptionModel([
             'plan_id' => $plan->id,
             'starts_on' => Carbon::now()->subSeconds(1),
             'expires_on' => $date,
             'cancelled_on' => null,
             'payment_method' => ($this->subscriptionPaymentMethod) ?: null,
-            'is_paid' => (bool) ($this->subscriptionPaymentMethod) ? false : true,
+            'is_paid' => (bool)($this->subscriptionPaymentMethod) ? false : true,
             'charging_price' => ($this->chargingPrice) ?: $plan->price,
             'charging_currency' => ($this->chargingCurrency) ?: $plan->currency,
             'is_recurring' => $isRecurring,
@@ -257,15 +260,16 @@ trait HasPlans
     /**
      * Upgrade the binded model's plan. If it is the same plan, it just extends it.
      *
-     * @param PlanModel $newPlan The new Plan model instance.
+     * @param \Rennokki\Plans\Models\PlanModel $newPlan The new Plan model instance.
      * @param int $duration The duration, in days, for the new subscription.
      * @param bool $startFromNow Wether the subscription will start from now, extending the current plan, or a new subscription will be created to extend the current one.
      * @param bool $isRecurring Wether the subscription should auto renew. The renewal period (in days) is the difference between now and the set date.
-     * @return PlanSubscription The PlanSubscription model instance with the new plan or the current one, extended.
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel The PlanSubscription model instance with the new plan or the current one, extended.
+     * @throws \Exception
      */
     public function upgradeCurrentPlanTo($newPlan, int $duration = 30, bool $startFromNow = true, bool $isRecurring = true)
     {
-        if (! $this->hasActiveSubscription()) {
+        if (!$this->hasActiveSubscription()) {
             return $this->subscribeTo($newPlan, $duration, $isRecurring);
         }
 
@@ -277,6 +281,7 @@ trait HasPlans
         $activeSubscription->load(['plan']);
 
         $subscription = $this->extendCurrentSubscriptionWith($duration, $startFromNow, $isRecurring);
+
         $oldPlan = $activeSubscription->plan;
 
         if ($subscription->plan_id != $newPlan->id) {
@@ -293,15 +298,16 @@ trait HasPlans
     /**
      * Upgrade the binded model's plan. If it is the same plan, it just extends it.
      *
-     * @param PlanModel $newPlan The new Plan model instance.
-     * @param DateTme|string $date The date (either DateTime, date or Carbon instance) until the subscription will be extended until.
+     * @param \Rennokki\Plans\Models\PlanModel $newPlan The new Plan model instance.
+     * @param \DateTime|string $date The date (either DateTime, date or Carbon instance) until the subscription will be extended until.
      * @param bool $startFromNow Wether the subscription will start from now, extending the current plan, or a new subscription will be created to extend the current one.
      * @param bool $isRecurring Wether the subscription should auto renew. The renewal period (in days) is the difference between now and the set date.
-     * @return PlanSubscription The PlanSubscription model instance with the new plan or the current one, extended.
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel The PlanSubscription model instance with the new plan or the current one, extended.
+     * @throws \Exception
      */
     public function upgradeCurrentPlanToUntil($newPlan, $date, bool $startFromNow = true, bool $isRecurring = true)
     {
-        if (! $this->hasActiveSubscription()) {
+        if (!$this->hasActiveSubscription()) {
             return $this->subscribeToUntil($newPlan, $date, $isRecurring);
         }
 
@@ -340,11 +346,12 @@ trait HasPlans
      * @param int $duration The duration, in days, for the extension.
      * @param bool $startFromNow Wether the subscription will be extended from now, extending to the current plan, or a new subscription will be created to extend the current one.
      * @param bool $isRecurring Wether the subscription should auto renew. The renewal period (in days) equivalent with $duration.
-     * @return PlanSubscription The PlanSubscription model instance of the extended subscription.
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel The PlanSubscription model instance of the extended subscription.
+     * @throws \Exception
      */
     public function extendCurrentSubscriptionWith(int $duration = 30, bool $startFromNow = true, bool $isRecurring = true)
     {
-        if (! $this->hasActiveSubscription()) {
+        if (!$this->hasActiveSubscription()) {
             if ($this->hasSubscriptions()) {
                 $lastActiveSubscription = $this->lastActiveSubscription();
                 $lastActiveSubscription->load(['plan']);
@@ -391,14 +398,15 @@ trait HasPlans
     /**
      * Extend the subscription until a certain date.
      *
-     * @param DateTme|string $date The date (either DateTime, date or Carbon instance) until the subscription will be extended until.
+     * @param \DateTime|string $date The date (either DateTime, date or Carbon instance) until the subscription will be extended until.
      * @param bool $startFromNow Wether the subscription will be extended from now, extending to the current plan, or a new subscription will be created to extend the current one.
      * @param bool $isRecurring Wether the subscription should auto renew. The renewal period (in days) is the difference between now and the set date.
-     * @return PlanSubscription The PlanSubscription model instance of the extended subscription.
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel The PlanSubscription model instance of the extended subscription.
+     * @throws \Exception
      */
     public function extendCurrentSubscriptionUntil($date, bool $startFromNow = true, bool $isRecurring = true)
     {
-        if (! $this->hasActiveSubscription()) {
+        if (!$this->hasActiveSubscription()) {
             if ($this->hasSubscriptions()) {
                 $lastActiveSubscription = $this->lastActiveSubscription();
                 $lastActiveSubscription->load(['plan']);
@@ -450,11 +458,11 @@ trait HasPlans
     /**
      * Cancel the current subscription.
      *
-     * @return bool Wether the subscription was cancelled or not.
+     * @return bool|\Rennokki\Plans\Models\PlanSubscriptionModel
      */
     public function cancelCurrentSubscription()
     {
-        if (! $this->hasActiveSubscription()) {
+        if (!$this->hasActiveSubscription()) {
             return false;
         }
 
@@ -479,11 +487,12 @@ trait HasPlans
      * if the last active subscription was using Stripe and was paid.
      *
      * @param string $stripeToken The stripe Token for integrated Stripe Charge feature.
-     * @return false|PlanSubscriptionModel
+     * @return false|\Rennokki\Plans\Models\PlanSubscriptionModel
+     * @throws \Exception
      */
     public function renewSubscription($stripeToken = null)
     {
-        if (! $this->hasSubscriptions()) {
+        if (!$this->hasSubscriptions()) {
             return false;
         }
 
@@ -497,11 +506,11 @@ trait HasPlans
 
         $lastActiveSubscription = $this->lastActiveSubscription();
 
-        if (! $lastActiveSubscription) {
+        if (!$lastActiveSubscription) {
             return false;
         }
 
-        if (! $lastActiveSubscription->is_recurring || $lastActiveSubscription->isCancelled()) {
+        if (!$lastActiveSubscription->is_recurring || $lastActiveSubscription->isCancelled()) {
             return false;
         }
 
@@ -510,7 +519,7 @@ trait HasPlans
         $recurringEachDays = $lastActiveSubscription->recurring_each_days;
 
         if ($lastActiveSubscription->payment_method) {
-            if (! $lastActiveSubscription->is_paid) {
+            if (!$lastActiveSubscription->is_paid) {
                 return false;
             }
 

@@ -16,7 +16,7 @@ class StripeHelper
      */
     public static function isZeroDecimalCurrency(string $currency)
     {
-        return (bool) in_array($currency, Self::$stripeZeroDecimalCurrencies);
+        return (bool)in_array($currency, self::$stripeZeroDecimalCurrencies);
     }
 
     /**
@@ -28,11 +28,11 @@ class StripeHelper
      */
     public static function fromStripeAmountToReal(float $amount, string $currency): float
     {
-        if (! Self::isZeroDecimalCurrency($currency)) {
-            return (float) ($amount / 100);
+        if (!self::isZeroDecimalCurrency($currency)) {
+            return (float)($amount / 100);
         }
 
-        return (float) $amount;
+        return (float)$amount;
     }
 
     /**
@@ -44,10 +44,10 @@ class StripeHelper
      */
     public static function fromRealAmountToStripe(float $amount, string $currency): float
     {
-        if (! Self::isZeroDecimalCurrency($currency)) {
-            return (float) ($amount * 100);
+        if (!self::isZeroDecimalCurrency($currency)) {
+            return (float)($amount * 100);
         }
 
-        return (float) $amount;
+        return (float)$amount;
     }
 }

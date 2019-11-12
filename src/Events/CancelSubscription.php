@@ -8,12 +8,19 @@ class CancelSubscription
 {
     use SerializesModels;
 
+    /**
+     * @var \Illuminate\Database\Eloquent\Model
+     */
     public $model;
+
+    /**
+     * @var \Rennokki\Plans\Models\PlanSubscriptionModel
+     */
     public $subscription;
 
     /**
-     * @param Model $model The model on which the action was done.
-     * @param SubscriptionModel $subscription Subscription that was cancelled.
+     * @param \Illuminate\Database\Eloquent\Model $model The model on which the action was done.
+     * @param \Rennokki\Plans\Models\PlanSubscriptionModel $subscription Subscription that was cancelled.
      * @return void
      */
     public function __construct($model, $subscription)

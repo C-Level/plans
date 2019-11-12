@@ -46,4 +46,17 @@ class PlanModel extends Model
     {
         return $this->hasMany(config('plans.models.feature'), 'plan_id');
     }
+
+    /**
+     * @param null $property
+     * @return mixed
+     */
+    public function getMetaData($property = null)
+    {
+        if (is_null($property)) {
+            return $this->metadata;
+        }
+
+        return $this->metadata->{$property};
+    }
 }

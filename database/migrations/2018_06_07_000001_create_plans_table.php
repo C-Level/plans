@@ -20,7 +20,7 @@ class CreatePlansTable extends Migration
             $table->float('price', 8, 2);
             $table->string('currency');
             $table->integer('duration')->default(30);
-            $table->mediumText('metadata')->nullable();
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -32,7 +32,7 @@ class CreatePlansTable extends Migration
             $table->text('description')->nullable();
             $table->enum('type', ['feature', 'limit'])->default('feature');
             $table->integer('limit')->default(0);
-            $table->mediumText('metadata')->nullable();
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
 

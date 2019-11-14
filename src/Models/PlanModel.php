@@ -36,7 +36,7 @@ class PlanModel extends Model
      * @inheritDoc
      */
     protected $casts = [
-        'metadata' => 'object',
+        'metadata' => 'array',
     ];
 
     /**
@@ -57,6 +57,6 @@ class PlanModel extends Model
             return $this->metadata;
         }
 
-        return $this->metadata->{$property};
+        return $this->metadata[$property];
     }
 }

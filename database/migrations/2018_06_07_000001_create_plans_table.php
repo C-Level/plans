@@ -28,7 +28,7 @@ class CreatePlansTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('plan_id');
             $table->string('name');
-            $table->string('code')->unique();
+            $table->string('code');
             $table->text('description')->nullable();
             $table->enum('type', ['feature', 'limit'])->default('feature');
             $table->integer('limit')->default(0);
